@@ -2,12 +2,9 @@
 
 namespace App\HttpController;
 
-use App\Model\User as UserModel;
-use App\Exception\SystemException;
 use EasySwoole\Http\Message\Status;
 use App\Service\User as UserService;
 use App\Service\Mail as MailService;
-use App\Service\Token as TokenService;
 use EasySwoole\Component\Context\ContextManager;
 
 class User extends ApiBase
@@ -39,23 +36,8 @@ class User extends ApiBase
         // 请求参数
         $data = ContextManager::getInstance()->get('data');
 
-        $UserService = UserService::getInstance();
-
-        // 检查验证码
-        $UserService->checkCaptcha($mail, $captcha);
-
-        // 检查有无注册
-        $UserService->checkRegisted($mail);
-
-        // 新增用户
-        $model = new UserModel($data);
-        $userId = $model->save();
-        if (!$userId) {
-            throw new SystemException([]);
-        }
-
         // 颁发token
-        $token = TokenService::getInstance()->getToken($userId, $name);
+        $token = UserService::getInstance()->register($mail, $captcha, $name, $data);
         $this->writeJson(Status::CODE_OK, ['token' => $token], 'success');
     }
 
@@ -68,11 +50,8 @@ class User extends ApiBase
      */
     public function login($account, $pwd)
     {
-        // 检查密码
-        $userInfo = UserService::getInstance()->checkPwd($account, $pwd);
+        $token = UserService::getInstance()->login($account, $pwd);
 
-        // 颁发token
-        $token = TokenService::getInstance()->getToken($userInfo['id'], $userInfo['name']);
         $this->writeJson(Status::CODE_OK, ['token' => $token], 'success');
     }
 }
