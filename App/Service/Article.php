@@ -5,13 +5,14 @@ namespace App\Service;
 use App\Exception\ErrCode;
 use App\Exception\BaseException;
 use App\Exception\SystemException;
+use EasySwoole\Mysqli\QueryBuilder;
 use EasySwoole\Component\Singleton;
 use EasySwoole\Http\Message\Status;
 use App\Exception\ParameterException;
 use App\Model\Article as ArticleModel;
 use EasySwoole\EasySwoole\Config as ESConfig;
+use App\Service\WordMatch as WordMatchService;
 use App\Model\ArticleAuthority as ArticleAuthorityModel;
-use EasySwoole\Mysqli\QueryBuilder;
 
 class Article
 {
@@ -26,6 +27,9 @@ class Article
 
         // 检查是否可以发布文章
         $this->ableToPublish($this->userId);
+
+        // 检查内容
+        WordMatchService::getInstance()->check($data['content']);
 
         // 新增文章
         $model = new ArticleModel($data);

@@ -12,6 +12,7 @@ use App\Model\Comment as CommentModel;
 use App\Model\Article as ArticleModel;
 use App\Service\Article as ArticleService;
 use EasySwoole\EasySwoole\Config as ESConfig;
+use App\Service\WordMatch as WordMatchService;
 
 class Comment
 {
@@ -81,6 +82,9 @@ class Comment
      */
     private function add($data)
     {
+        // 检查内容
+        WordMatchService::getInstance()->check($data['content']);
+
         // 新增评论
         $model = new CommentModel($data);
         $id = $model->save();

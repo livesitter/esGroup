@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1bf9519ef67abc54d1a0e16eb1d39e8e",
+    "content-hash": "d3cff818ebbc3b036e0d7adaed212e78",
     "packages": [
         {
             "name": "dragonmantank/cron-expression",
@@ -1294,6 +1294,55 @@
                 "swoole"
             ],
             "time": "2020-04-29T01:30:45+00:00"
+        },
+        {
+            "name": "easyswoole/words-match",
+            "version": "1.0.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/easy-swoole/words-match.git",
+                "reference": "c87d78863cda8c20c309279f0b2f3f9199be3d5f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/easy-swoole/words-match/zipball/c87d78863cda8c20c309279f0b2f3f9199be3d5f",
+                "reference": "c87d78863cda8c20c309279f0b2f3f9199be3d5f",
+                "shasum": "",
+                "mirrors": [
+                    {
+                        "url": "https://mirrors.aliyun.com/composer/dists/%package%/%reference%.%type%",
+                        "preferred": true
+                    }
+                ]
+            },
+            "require-dev": {
+                "easyswoole/swoole-ide-helper": "^1.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "EasySwoole\\WordsMatch\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "huizhang",
+                    "email": "tuzisir@163.com"
+                }
+            ],
+            "description": "An efficient swoole framework",
+            "homepage": "https://www.easyswoole.com/",
+            "keywords": [
+                "async",
+                "easyswoole",
+                "framework",
+                "swoole"
+            ],
+            "time": "2020-04-15T08:47:20+00:00"
         },
         {
             "name": "nikic/fast-route",

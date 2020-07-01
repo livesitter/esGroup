@@ -12,4 +12,5 @@ class ErrCode
     const TOKEN_ERROR       = 1004;
     const CAPTCHA_ERROR     = 1005;
     const PERMISSION_ERROR  = 1006;
+    const SENSITIVE_ERROR   = 1007;
 }
