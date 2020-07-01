@@ -9,7 +9,7 @@ use EasySwoole\Component\Context\ContextManager;
 class Article extends ApiBase
 {
     // 需要检查用户状态的方法
-    protected $checkAction = ['newArticle', 'delArticle', 'articleHiddenText'];
+    protected $checkAction = ['newArticle', 'delArticle', 'articleHiddenText', 'userArticleList'];
 
     /**
      * 发布新文章
@@ -85,6 +85,17 @@ class Article extends ApiBase
     public function articleList($categoryId, $page = 1)
     {
         $res = ArticleService::getInstance()->list($categoryId, $page);
+
+        $this->writeJson(Status::CODE_OK, $res, 'success');
+    }
+
+    /**
+     * 用户文章列表
+     * @Param(name="page",from={GET},integer="非法page参数",min={1,"page参数最小为1"}
+     */
+    public function userArticleList($page = 1)
+    {
+        $res = ArticleService::getInstance()->listOfUser($this->userId, $page);
 
         $this->writeJson(Status::CODE_OK, $res, 'success');
     }

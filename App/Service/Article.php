@@ -11,6 +11,7 @@ use App\Exception\ParameterException;
 use App\Model\Article as ArticleModel;
 use EasySwoole\EasySwoole\Config as ESConfig;
 use App\Model\ArticleAuthority as ArticleAuthorityModel;
+use EasySwoole\Mysqli\QueryBuilder;
 
 class Article
 {
@@ -79,7 +80,7 @@ class Article
      */
     public function list($categoryId, $page)
     {
-        $limit = 1;
+        $limit = ESConfig::getInstance()->getConf('PAGE_SIZE');
         $offset = $limit * ($page - 1);
 
         // 分页查询模型
@@ -88,7 +89,39 @@ class Article
             ->withTotalCount();
 
         // 列表数据
-        $list = $model->with(['user'])->all(['category_id' => $categoryId]);
+        $list = $model->with(['user'])->all(['category_id' => $categoryId, 'status' => 1]);
+
+        // 记录数
+        $total = $model->lastQueryResult()->getTotalCount();
+
+        // 返回结果
+        $res = [
+            'total_num' => $total,
+            'total_page' => ceil($total / $limit),
+            'content'   => $list
+        ];
+
+        return $res;
+    }
+
+    /**
+     * 获取用户文章列表
+     * @param  Int  $userId  用户ID
+     * @param  Int  $page    页码
+     * @return Array
+     */
+    public function listOfUser($userId, $page)
+    {
+        $limit = ESConfig::getInstance()->getConf('PAGE_SIZE');
+        $offset = $limit * ($page - 1);
+
+        // 分页查询模型
+        $model = ArticleModel::create()
+            ->limit($offset, $limit)
+            ->withTotalCount();
+
+        // 列表数据
+        $list = $model->with(['user'])->all(['user_id' => $userId]);
 
         // 记录数
         $total = $model->lastQueryResult()->getTotalCount();
@@ -160,5 +193,55 @@ class Article
         }
 
         return true;
+    }
+
+    /**
+     * 获取作者的用户ID
+     * @param  Int  $articleId  文章ID
+     */
+    public function getAuthor($articleId)
+    {
+        // 查询楼主用户ID
+        $authorId = ArticleModel::create()
+            ->where('status', 1)
+            ->get($articleId)
+            ->val('user_id');
+
+        // 查询不到，则表明文章肯定不存在
+        if (!$authorId) {
+            throw new ParameterException([
+                'code' => Status::CODE_NOT_FOUND,
+                'msg'  => '文章不存在',
+                'error_code' => ErrCode::PARAM_ERROR
+            ]);
+        }
+
+        return $authorId;
+    }
+
+    /**
+     * 回复数自增
+     * @param  Int  $articleId  文章ID
+     */
+    public function incr($articleId)
+    {
+        ArticleModel::create()->update([
+            'comment_sum' => QueryBuilder::inc(1),
+        ], [
+            'id' => $articleId
+        ]);
+    }
+
+    /**
+     * 回复数自减
+     * @param  Int  $articleId  文章ID
+     */
+    public function decr($articleId)
+    {
+        ArticleModel::create()->update([
+            'comment_sum' => QueryBuilder::dec(1),
+        ], [
+            'id' => $articleId
+        ]);
     }
 }
