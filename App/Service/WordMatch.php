@@ -15,7 +15,7 @@ class WordMatch
      * @param  String  $content  内容
      * @return Boolean
      */
-    public function checkWord($content)
+    public function check($content)
     {
         $res = WordsMatchClient::getInstance()->search($content);
         if ($res) {

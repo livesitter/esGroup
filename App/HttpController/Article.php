@@ -16,12 +16,12 @@ class Article extends ApiBase
      * @Method(allow={POST})
      * @InjectParamsContext(key="data")
      * @Param(name="category_id",from={POST},notEmpty="不能为空",between={1,10,"非法栏目ID"})
-     * @Param(name="content",from={POST},lengthMax={3000,"文章字数最多不超过3000字"})
-     * @Param(name="image",from={POST},json="image不是合法类型",lengthMax={3000,"文章字数最多不超过3000字"})
-     * @Param(name="hidden",from={POST},lengthMax={3000,"隐藏内容最多不超过3000字"})
-     * @Param(name="price",from={POST},integer="非法price值")
+     * @Param(name="content",from={POST},optional="", lengthMax={3000,"文章字数最多不超过3000字"})
+     * @Param(name="image",from={POST},optional="", json="image不是合法类型",lengthMax={3000,"文章字数最多不超过3000字"})
+     * @Param(name="hid",from={POST},optional="", lengthMax={3000,"隐藏内容最多不超过3000字"})
+     * @Param(name="price",from={POST},optional="", integer="非法price值")
      */
-    public function newArticle($categoryId, $content, $image, $price)
+    public function newArticle($categoryId, $content, $image, $hid, $price)
     {
         // 请求参数
         $data = ContextManager::getInstance()->get('data');

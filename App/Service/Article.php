@@ -26,7 +26,7 @@ class Article
     {
 
         // 检查是否可以发布文章
-        $this->ableToPublish($this->userId);
+        $this->ableToPublish($data['user_id']);
 
         // 检查内容
         WordMatchService::getInstance()->check($data['content']);
@@ -48,19 +48,16 @@ class Article
     public function detail($articleId)
     {
         // 文章内容
-        $content = ArticleModel::create()->with(['author'])->get($articleId);
+        $content = ArticleModel::create()->getDetail($articleId);
         if (!$content) {
-            throw new ParameterException(['code' => Status::CODE_NOT_FOUND]);
+            throw new ParameterException(['code' => Status::CODE_NOT_FOUND, 'msg' => '未找到文章']);
         }
-
-        // 删除隐藏内容
-        unset($content['hidden']);
 
         return $content;
     }
 
     /**
-     * 获取文章内容（主方法）
+     * 获取文章隐藏内容（主方法）
      * @param  Int  $articleId  文章ID
      * @param  Int  $userId     用户ID
      */
@@ -72,7 +69,7 @@ class Article
             return '';
         }
 
-        $content = ArticleModel::create()->get($articleId)->val('hidden');
+        $content = ArticleModel::create()->get($articleId)->val('hid');
         return $content;
     }
 
@@ -84,26 +81,8 @@ class Article
      */
     public function list($categoryId, $page)
     {
-        $limit = ESConfig::getInstance()->getConf('PAGE_SIZE');
-        $offset = $limit * ($page - 1);
-
-        // 分页查询模型
-        $model = ArticleModel::create()
-            ->limit($offset, $limit)
-            ->withTotalCount();
-
-        // 列表数据
-        $list = $model->with(['user'])->all(['category_id' => $categoryId, 'status' => 1]);
-
-        // 记录数
-        $total = $model->lastQueryResult()->getTotalCount();
-
         // 返回结果
-        $res = [
-            'total_num' => $total,
-            'total_page' => ceil($total / $limit),
-            'content'   => $list
-        ];
+        $res = ArticleModel::create()->getList($categoryId, $page);
 
         return $res;
     }
@@ -192,11 +171,14 @@ class Article
             'article_id' => $articleId
         ])->get();
 
-        if (!$authority) {
-            return false;
+        // 文章作者ID
+        $authorId = $this->getAuthor($articleId);
+
+        if ($authority || $authorId == $userId) {
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     /**

@@ -51,7 +51,7 @@ class EasySwooleEvent implements Event
             ->setServerName('Easyswoole words-match') // 服务名称
             ->setTempDir(EASYSWOOLE_TEMP_DIR) // temp地址
             ->setWordsMatchPath(EASYSWOOLE_ROOT . '/WordsMatch/')
-            ->setDefaultWordBank('/easyswoole/sensitive_word.txt') // 服务启动时默认导入的词库文件路径
+            ->setDefaultWordBank('sensitive_word.txt') // 服务启动时默认导入的词库文件路径
             ->setSeparator(',') // 词和其它信息分隔符
             ->attachToServer(ServerManager::getInstance()->getSwooleServer());
     }

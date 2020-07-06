@@ -45,7 +45,7 @@ class User extends ApiBase
      * 登录
      * @Method(allow={POST})
      * @InjectParamsContext(key="data")
-     * @Param(name="account",from={POST},notEmpty="不能为空",betweenLen={1,8,"请输入1~8个字"})
+     * @Param(name="account",from={POST},notEmpty="不能为空")
      * @Param(name="pwd",from={POST},notEmpty="不能为空",betweenLen={8,15,"请输入8~15个字符"})
      */
     public function login($account, $pwd)

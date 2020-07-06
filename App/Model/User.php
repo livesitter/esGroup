@@ -31,4 +31,5 @@ class User extends AbstractModel
         $salt = Config::getInstance()->getConf('APP_SALT');
         return Hash::makePasswordHash($value . $salt);
     }
+
 }

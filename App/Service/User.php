@@ -119,16 +119,13 @@ class User
     public function checkPwd($account, $pwd)
     {
         // 用户信息
-        $userInfo = UserModel::create()->where(" (name = $account or mail = $account) ")->get();
+        $userInfo = UserModel::create()->where(" name = '$account' or mail = '$account' ")->get();
 
-        // 盐
-        $salt = Config::getInstance()->getConf('APP_SALT');
-
-        // 加密后的密码
-        $pwd =  Hash::makePasswordHash($pwd . $salt);
+        // 对比加密值
+        $flag = Hash::validatePasswordHash($pwd, $userInfo['pwd']);
 
         // 密码错误
-        if ($pwd != $userInfo['pwd']) {
+        if (!$flag) {
             throw new ParameterException([
                 'code' => Status::CODE_FORBIDDEN,
                 'msg' => '密码错误'
