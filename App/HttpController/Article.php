@@ -2,6 +2,7 @@
 
 namespace App\HttpController;
 
+use App\Exception\ParameterException;
 use EasySwoole\Http\Message\Status;
 use App\Service\Article as ArticleService;
 use EasySwoole\Component\Context\ContextManager;
@@ -28,7 +29,7 @@ class Article extends ApiBase
 
         // 文字和图片均为空，返回提示
         if (!isset($data['image']) && !isset($data['content'])) {
-            $this->writeJson(Status::CODE_FORBIDDEN, null, '图片和文字，至少填写其中一个');
+            throw new ParameterException(['msg' => '图片和文字，至少填写其中一个']);
         }
 
         // 附加用户ID
@@ -79,12 +80,18 @@ class Article extends ApiBase
     /**
      * 分类文章列表
      * @Method(allow={GET})
-     * @Param(name="category_id",from={GET},notEmpty="不能为空",between={1,10,"非法栏目ID"})
-     * @Param(name="page",from={GET},integer="非法page参数",min={1,"page参数最小为1"})
+     * @Param(name="category_id",from={GET},optional="",notEmpty="不能为空",between={1,10,"非法栏目ID"})
+     * @Param(name="user_id",from={GET},optional="",notEmpty="不能为空",between={1,10,"非法栏目ID"})
+     * @Param(name="page",from={GET},optional="",integer="非法page参数",min={1,"page参数最小为1"})
      */
-    public function articleList($categoryId, $page = 1)
+    public function articleList($categoryId, $userId, $page)
     {
-        $res = ArticleService::getInstance()->list($categoryId, $page);
+        // 文字和图片均为空，返回提示
+        if (!$categoryId && !$userId) {
+            throw new ParameterException(['msg' => '分类ID和用户ID至少传一个']);
+        }
+
+        $res = ArticleService::getInstance()->list($categoryId, $userId, $page);
 
         $this->writeJson(Status::CODE_OK, $res, 'success');
     }
@@ -93,7 +100,7 @@ class Article extends ApiBase
      * 用户文章列表
      * @Param(name="page",from={GET},integer="非法page参数",min={1,"page参数最小为1"}
      */
-    public function userArticleList($page = 1)
+    public function userArticleList($page)
     {
         $res = ArticleService::getInstance()->listOfUser($this->userId, $page);
 

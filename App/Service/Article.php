@@ -13,6 +13,7 @@ use App\Model\Article as ArticleModel;
 use EasySwoole\EasySwoole\Config as ESConfig;
 use App\Service\WordMatch as WordMatchService;
 use App\Model\ArticleAuthority as ArticleAuthorityModel;
+use App\Model\ArticleWithUserInfo as ArticleWithUserInfoModel;
 
 class Article
 {
@@ -48,7 +49,7 @@ class Article
     public function detail($articleId)
     {
         // 文章内容
-        $content = ArticleModel::create()->getDetail($articleId);
+        $content = ArticleWithUserInfoModel::create()->with(['comment'])->where('id', $articleId)->get();
         if (!$content) {
             throw new ParameterException(['code' => Status::CODE_NOT_FOUND, 'msg' => '未找到文章']);
         }
@@ -74,15 +75,16 @@ class Article
     }
 
     /**
-     * 获取分类文章列表
+     * 获取文章列表
      * @param  Int  $categoryId  分类ID
+     * @param  Int  $userId      用户ID
      * @param  Int  $page        页码
      * @return Array
      */
-    public function list($categoryId, $page)
+    public function list($categoryId, $userId, $page)
     {
         // 返回结果
-        $res = ArticleModel::create()->getList($categoryId, $page);
+        $res = ArticleModel::create()->getList($categoryId, $userId, $page ?? 1);
 
         return $res;
     }
@@ -96,6 +98,7 @@ class Article
     public function listOfUser($userId, $page)
     {
         $limit = ESConfig::getInstance()->getConf('PAGE_SIZE');
+        $page = $page ?? 1;
         $offset = $limit * ($page - 1);
 
         // 分页查询模型

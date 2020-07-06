@@ -3,10 +3,13 @@
 namespace App\Service;
 
 use App\Exception\ErrCode;
+use EasySwoole\ORM\DbManager;
+use EasySwoole\EasySwoole\Logger;
 use App\Exception\SystemException;
 use EasySwoole\Component\Singleton;
 use EasySwoole\Http\Message\Status;
 use App\Exception\ParameterException;
+use EasySwoole\ORM\Db\ClientInterface;
 use App\Exception\PermissionException;
 use App\Model\Comment as CommentModel;
 use App\Model\Article as ArticleModel;
@@ -64,16 +67,30 @@ class Comment
             throw new PermissionException([]);
         }
 
-        // 更新评论状态
-        $flag2 = CommentModel::create()->update([
-            'status' => 0
-        ], ['id' => $commentId]);
-        if (!$flag2) {
-            throw new SystemException([]);
-        }
+        try {
+            // 开启事务
+            DbManager::getInstance()->startTransaction();
 
-        // 回复数-1
-        ArticleService::getInstance()->decr($articleId);
+            // 更新评论状态
+            $flag2 = CommentModel::create()->update([
+                'status' => 0
+            ], ['id' => $commentId]);
+
+            // 回复数-1
+            ArticleService::getInstance()->decr($articleId);
+        } catch (\Throwable  $e) {
+
+            // 回滚事务
+            DbManager::getInstance()->rollback();
+
+            // 记录错误
+            Logger::getInstance()->error('delete comment error, msg:' . json_encode($e->getMessage(), JSON_UNESCAPED_UNICODE));
+
+            throw new SystemException([]);
+        } finally {
+            // 提交事务
+            DbManager::getInstance()->commit();
+        }
     }
 
     /**
@@ -82,18 +99,33 @@ class Comment
      */
     private function add($data)
     {
+
         // 检查内容
         WordMatchService::getInstance()->check($data['content']);
 
-        // 新增评论
-        $model = new CommentModel($data);
-        $id = $model->save();
-        if (!$id) {
-            throw new SystemException([]);
-        }
+        try {
+            // 开启事务
+            DbManager::getInstance()->startTransaction();
 
-        // 回复数+1
-        ArticleService::getInstance()->incr($data['article_id']);
+            // 新增评论
+            $model = new CommentModel($data);
+            $id = $model->save();
+
+            // 回复数+1
+            ArticleService::getInstance()->incr($data['article_id']);
+        } catch (\Throwable  $e) {
+
+            // 回滚事务
+            DbManager::getInstance()->rollback();
+
+            // 记录错误
+            Logger::getInstance()->error('add comment error, msg:' . json_encode($e->getMessage(), JSON_UNESCAPED_UNICODE));
+
+            throw new SystemException([]);
+        } finally {
+            // 提交事务
+            DbManager::getInstance()->commit();
+        }
     }
 
     /**
@@ -105,6 +137,7 @@ class Comment
     public function list($articleId, $page)
     {
         $limit = ESConfig::getInstance()->getConf('PAGE_SIZE');
+        $page = $page ?? 1;
         $offset = $limit * ($page - 1);
 
         // 分页查询模型

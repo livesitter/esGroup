@@ -14,11 +14,12 @@ class Comment extends ApiBase
     /**
      * 新增回复（回复楼主）
      * @Method(allow={POST})
+     * @InjectParamsContext(key="data")
      * @Param(name="article_id",from={POST},notEmpty="不能为空",integer="非法文章ID",min={1,"非法文章ID"})
      * @Param(name="content",from={POST},notEmpty="不能为空",lengthMax={200,"字数最多不超过200字"})
-     * @Param(name="comment_id",from={POST},integer="非法评论ID",min={1,"非法评论ID"})
+     * @Param(name="comment_id",from={POST},optional="",integer="非法评论ID",min={1,"非法评论ID"})
      */
-    public function newComment($articleId, $content, $commentId = 0)
+    public function newComment($articleId, $content, $commentId)
     {
         // 请求参数
         $data = ContextManager::getInstance()->get('data');
@@ -42,9 +43,9 @@ class Comment extends ApiBase
      * 评论列表
      * @Method(allow={GET})
      * @Param(name="article_id",from={GET},notEmpty="不能为空",integer="非法文章ID",min={1,"非法文章ID"})
-     * @Param(name="page",from={GET},integer="非法page参数",min={1,"page参数最小为1"})
+     * @Param(name="page",from={GET},optional="",integer="非法page参数",min={1,"page参数最小为1"})
      */
-    public function CommentList($articleId, $page = 1)
+    public function CommentList($articleId, $page)
     {
         $res = CommentService::getInstance()->list($articleId, $page);
 
