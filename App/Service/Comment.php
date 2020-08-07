@@ -88,6 +88,7 @@ class Comment
 
             throw new SystemException([]);
         } finally {
+
             // 提交事务
             DbManager::getInstance()->commit();
         }

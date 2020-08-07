@@ -3,15 +3,19 @@
 namespace App\Service;
 
 use App\Exception\ErrCode;
+use EasySwoole\ORM\DbManager;
 use App\Exception\BaseException;
+use EasySwoole\EasySwoole\Logger;
 use App\Exception\SystemException;
 use EasySwoole\Mysqli\QueryBuilder;
 use EasySwoole\Component\Singleton;
 use EasySwoole\Http\Message\Status;
 use App\Exception\ParameterException;
+use App\Exception\PermissionException;
 use App\Model\Article as ArticleModel;
 use EasySwoole\EasySwoole\Config as ESConfig;
 use App\Service\WordMatch as WordMatchService;
+use App\Model\ArticleLikes as ArticleLikesModel;
 use App\Model\ArticleAuthority as ArticleAuthorityModel;
 use App\Model\ArticleWithUserInfo as ArticleWithUserInfoModel;
 
@@ -140,6 +144,48 @@ class Article
     }
 
     /**
+     * 点赞文章
+     * @param  Int  $articleId  文章ID
+     * @param  Int  $userId     用户ID
+     */
+    public function like($articleId, $userId)
+    {
+        // 检查有无点过赞
+        $this->checkLikes($articleId, $userId);
+
+        try {
+            // 开启事务
+            DbManager::getInstance()->startTransaction();
+
+            // 增加文章点赞数
+            $flag = ArticleModel::create()->update(['likes' => QueryBuilder::inc(1)], [
+                'id'      => $articleId
+            ]);
+
+            // 新增点赞
+            $data = [
+                'article_id' => $articleId,
+                'user_id'    => $userId
+            ];
+            $model = new ArticleLikesModel($data);
+            $likeId = $model->save();
+        } catch (\Throwable  $e) {
+
+            // 回滚事务
+            DbManager::getInstance()->rollback();
+
+            // 记录错误
+            Logger::getInstance()->error('like article, msg:' . json_encode($e->getMessage(), JSON_UNESCAPED_UNICODE));
+
+            throw new SystemException([]);
+        } finally {
+
+            // 提交事务
+            DbManager::getInstance()->commit();
+        }
+    }
+
+    /**
      * 能否发布文章
      * @param  Int  $userId  用户ID
      */
@@ -232,5 +278,23 @@ class Article
         ], [
             'id' => $articleId
         ]);
+    }
+
+    /**
+     * 检查是否点过赞
+     * @param  Int  $articleId  文章ID
+     */
+    public function checkLikes($articleId, $userId)
+    {
+        $liked = ArticleLikesModel::create()->where([
+            'user_id' => $userId,
+            'article_id' => $articleId
+        ])->get();
+
+        if ($liked) {
+            throw new PermissionException([
+                'msg' => '请勿重复点赞'
+            ]);
+        }
     }
 }
